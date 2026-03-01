@@ -1,0 +1,595 @@
+/* ========================
+   БАЗОВІ ЗМІННІ ТА ТЕМИ (Рівень Portfolio)
+   ======================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --font-main: 'Inter', sans-serif;
+  --font-editorial: 'Playfair Display', serif;
+
+  /* Light Theme - Дуже ніжні пастельні тони */
+  --bg-base: #fdfbfb;
+  --bg-gradient: radial-gradient(circle at 10% 20%, rgba(216, 241, 230, 0.4) 0%, rgba(233, 226, 255, 0.4) 90%);
+
+  /* Легке скло, майже невидиме */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #71717a;
+  --accent: #a78bfa; /* М'який фіолетовий */
+  --icon-color: #3f3f46;
+}
+
+[data-theme='dark'] {
+  /* Dark Theme - Глибокий космос, а не просто чорний */
+  --bg-base: #0f1115;
+  --bg-gradient: radial-gradient(circle at 80% 80%, rgba(45, 27, 105, 0.3) 0%, rgba(15, 23, 42, 0) 100%);
+
+  --glass-bg: rgba(15, 17, 21, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent: #c4b5fd;
+  --icon-color: #cbd5e1;
+}
+
+/* ========================
+   ГЛОБАЛЬНІ СТИЛІ
+   ======================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-base);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.8s ease, color 0.8s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Анімація фону (повільне дихання) */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle at center, var(--accent) 0%, transparent 40%);
+  opacity: 0.05;
+  z-index: -1;
+  animation: pulseBg 15s infinite alternate ease-in-out;
+}
+@keyframes pulseBg { 0% { transform: scale(1) translate(0, 0); } 100% { transform: scale(1.1) translate(2%, 2%); } }
+
+/* ========================
+   УТИЛІТИ ТА СКЛО
+   ======================== */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px); /* Сильніший блюр */
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 32px; /* Більші радіуси, як в iOS */
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.glass-panel:hover {
+  box-shadow: 0 30px 60px rgba(0,0,0,0.06);
+}
+
+[data-theme='dark'] .glass-panel:hover {
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.app-layout {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+/* ========================
+   HEADER ТА ПОШУК
+   ======================== */
+.header-container {
+  padding: 1rem 1.5rem 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 100px;
+  position: relative;
+  z-index: 1000;
+}
+
+.logo {
+  font-family: var(--font-editorial);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-style: italic;
+}
+
+/* ========================
+   ПОШУК (НОВИЙ ДИЗАЙН)
+   ======================== */
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1.2rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+.search-input {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.7rem 1.5rem 0.7rem 3rem; /* Місце для іконки */
+  border-radius: 100px; /* Пігулка */
+  width: 250px;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: var(--glass-shadow);
+}
+
+.search-input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+.search-input:focus {
+  width: 300px;
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.2);
+}
+
+[data-theme='dark'] .search-input:focus {
+  background: rgba(15, 17, 21, 0.8);
+}
+
+.controls { display: flex; gap: 0.5rem; }
+
+.control-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-btn:hover {
+  background: var(--text-primary);
+  color: var(--bg-base);
+}
+
+/* ========================
+   ГОЛОВНЕ ВІКНО (HERO)
+   ======================== */
+/* 1. Повертаємо баланс секції */
+.hero-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Рівні частини для тексту та 3D */
+  height: 75vh;
+  min-height: 600px;
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 2. Прибираємо max-width: 50%, який все зламав */
+.hero-text {
+  padding: 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 10;
+  width: 100%; /* Тепер він займає всю свою половину */
+}
+
+/* 3. Тепер обмежуємо ТІЛЬКИ назву міста */
+.editorial-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(3rem, 7vw, 7rem);
+  font-weight: 500;
+  line-height: 0.9;
+  margin: 0.5rem 0;
+  color: var(--text-primary);
+
+  /* Магія обрізання: */
+  display: block;
+  max-width: 90%;          /* Назва міста не лізе на територію 3D */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 4. Те саме для області */
+.location-sub {
+  font-size: 1.1rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Для карток прогнозу (якщо назва дня тижня задовга) */
+.forecast-day {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 80px;
+  text-align: center;
+}
+
+.editorial-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.editorial-title {
+  font-family: var(--font-editorial);
+  font-size: clamp(5rem, 8vw, 8rem); /* Адаптивний гігантський текст */
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -3px;
+  margin-bottom: 1rem;
+}
+
+.editorial-temp {
+  font-family: var(--font-editorial);
+  font-size: clamp(3rem, 5vw, 5rem);
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  font-style: italic;
+}
+
+.editorial-desc {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  letter-spacing: -0.2px;
+}
+
+.hero-3d {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: grab;
+}
+.hero-3d:active { cursor: grabbing; }
+
+/* Сітка деталей */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-top: auto; /* Притискає до низу текстового блоку */
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-icon { opacity: 0.7; }
+
+.detail-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.detail-value {
+  font-size: 1.3rem;
+  font-weight: 500;
+  font-family: var(--font-editorial);
+}
+
+/* ========================
+   ПРОГНОЗ (Круглі мінімалістичні картки)
+   ======================== */
+.forecast-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.forecast-card {
+  flex: 1;
+  max-width: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.8rem 1rem;
+  cursor: pointer;
+  border-radius: 28px; /* Було 100px, тепер гарний прямокутник */
+  border: 1px solid var(--glass-border);
+  transition: all 0.4s ease;
+  background: rgba(255, 255, 255, 0.2);
+}
+[data-theme='dark'] .forecast-card { background: rgba(0, 0, 0, 0.2); }
+
+.forecast-card:hover {
+  transform: translateY(-10px);
+}
+
+.forecast-card.active {
+  background: var(--text-primary);
+  color: var(--bg-base);
+  transform: translateY(-10px);
+}
+
+.forecast-card.active .lucide,
+.forecast-card.active .forecast-day,
+.forecast-card.active .forecast-temp {
+  color: var(--bg-base) !important;
+}
+
+.forecast-day {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.forecast-temp {
+  font-size: 1.4rem;
+  font-weight: 500;
+  font-family: var(--font-editorial);
+}
+
+/* ========================
+   НИЖНЯ СІТКА (Мінімалізм)
+   ======================== */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.mini-city-card {
+  height: 350px;
+  position: relative;
+  border-radius: 32px;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.mini-city-card:hover .mini-3d-placeholder {
+  transform: scale(1.05);
+}
+
+.mini-3d-placeholder {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1;
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mini-city-info {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none; /* Щоб клік йшов на всю картку */
+}
+
+.mini-city-temp {
+  font-family: var(--font-editorial);
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.mini-city-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px; /* Або підбери ширину під свій дизайн */
+}
+
+.footer-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+.footer-link:hover { color: var(--accent); }
+
+/* ========================
+   ІСТОРІЯ ПОШУКУ (DROPDOWN)
+   ======================== */
+/* ========================
+   ІСТОРІЯ ПОШУКУ (DROPDOWN)
+   ======================== */
+.recent-dropdown {
+  position: absolute;
+  top: 130%;
+  left: 0;
+  width: 100%;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-radius: 24px;
+  animation: slideDown 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(-10px);
+
+  /* 🔥 ВАЖЛИВО: Високий z-index */
+  z-index: 9999;
+
+  /* Щоб список не зливався з фоном, додамо йому сильніший блюр і тінь */
+  background: var(--glass-bg);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  border: 1px solid var(--glass-border);
+}
+
+[data-theme='dark'] .recent-dropdown {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+@keyframes slideDown {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.recent-header {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 0.5rem;
+  padding-left: 0.8rem;
+  font-weight: 600;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.8rem 1rem;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.recent-item:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--accent);
+  transform: translateX(5px); /* Легкий зсув вправо при наведенні */
+}
+
+[data-theme='dark'] .recent-item:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* ========================
+   HOVER-ЕФЕКТИ ДЛЯ МІНІ-МІСТ
+   ======================== */
+.mini-city-card {
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* При наведенні на картку */
+.mini-city-card:hover {
+  transform: translateY(-15px); /* Підіймається вище */
+  border-color: var(--accent);  /* Рамка стає кольоровою */
+  box-shadow: 0 30px 60px rgba(167, 139, 250, 0.2); /* Фірмове світіння (Glow) */
+}
+
+[data-theme='dark'] .mini-city-card:hover {
+  box-shadow: 0 30px 60px rgba(196, 181, 253, 0.1);
+}
+
+/* Анімація цифри температури всередині картки */
+.mini-city-temp {
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mini-city-card:hover .mini-city-temp {
+  transform: scale(1.1) translateX(-5px); /* Температура збільшується */
+  color: var(--text-primary); /* Змінює колір з акцентного на білий/чорний */
+}
+
+/* 3D модель трохи наближається при наведенні */
+.mini-city-card:hover .mini-3d-placeholder {
+  transform: scale(1.15) rotate(2deg);
+}
+.search-input.search-error {
+  border-color: #ff7675;
+  background: rgba(255, 118, 117, 0.1);
+  animation: shake 0.4s linear;
+}
+
+.search-input.search-error::placeholder {
+  color: #ff7675;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+.location-sub {
+  font-size: 1rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+  letter-spacing: 0.5px;
+}
+
+.search-input.search-error {
+  border-color: #ff7675 !important;
+  background: rgba(255, 118, 117, 0.05) !important;
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.recent-item-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.recent-item-text small {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
