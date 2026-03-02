@@ -1,11 +1,9 @@
-import React, { useMemo } from 'react';
-import { useGLTF, Float, PresentationControls } from '@react-three/drei';
+import React from 'react';
+import { useGLTF, Float, PresentationControls, Clone } from '@react-three/drei';
 
 export default function CityModel({ modelUrl }) {
+    // Просто завантажуємо оригінал
     const { scene } = useGLTF(modelUrl);
-
-    // 🔥 ФІКС: Клонуємо модель. Тепер React StrictMode її не знищить!
-    const clonedScene = useMemo(() => scene.clone(), [scene]);
 
     return (
         <PresentationControls
@@ -17,8 +15,11 @@ export default function CityModel({ modelUrl }) {
             azimuth={[-Math.PI / 1.4, Math.PI / 2]}
         >
             <Float speed={2} rotationIntensity={0.5} floatIntensity={2} floatingRange={[-0.2, 0.2]}>
-                {/* Використовуємо клоновану сцену */}
-                <primitive object={clonedScene} scale={2.5} position={[0, -1, 0]} />
+
+                {/* 🔥 ФІКС: Використовуємо спеціальний компонент Clone.
+                    Він гарантує, що модель ніколи не "зламається" при зміні міст */}
+                <Clone object={scene} scale={2.5} position={[0, -1, 0]} />
+
             </Float>
         </PresentationControls>
     );

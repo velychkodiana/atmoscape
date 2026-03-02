@@ -1,31 +1,52 @@
 import React from 'react';
+import { Mail, Phone, Linkedin, Github, Sparkles } from 'lucide-react';
 
 export default function Footer() {
     return (
-        <footer className="glass-panel" style={{ marginTop: '2rem', padding: '4rem 2rem 2rem', borderRadius: '40px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                <h2 style={{ fontSize: 'clamp(3rem, 10vw, 8rem)', fontFamily: 'var(--font-editorial)', fontWeight: 800, letterSpacing: '-2px', opacity: 0.9 }}>
-                    AtmoScape.
-                </h2>
+        <footer className="footer-wrapper glass-panel">
+            <div className="footer-content">
+
+                {/* Ліва частина: Статус і заклик */}
+                <div className="footer-info">
+                    <h3 className="footer-title">
+                        Let's create something <span className="highlight-text">beautiful</span> <Sparkles size={20} className="sparkle-icon" />
+                    </h3>
+                    <div className="status-badge">
+                        <span className="pulse-dot"></span>
+                        <span className="status-text">Available for work & freelance</span>
+                    </div>
+                </div>
+
+                {/* Права частина: Скляні картки контактів */}
+                <div className="social-grid">
+                    <a href="mailto:твій_мейл@gmail.com" className="social-card" title="Email">
+                        <div className="social-icon-wrapper"><Mail size={18} /></div>
+                        <span>Email</span>
+                    </a>
+
+                    <a href="tel:+380000000000" className="social-card" title="Phone">
+                        <div className="social-icon-wrapper"><Phone size={18} /></div>
+                        <span>Phone</span>
+                    </a>
+
+                    <a href="https://linkedin.com/in/твій-профіль" target="_blank" rel="noreferrer" className="social-card" title="LinkedIn">
+                        <div className="social-icon-wrapper"><Linkedin size={18} /></div>
+                        <span>LinkedIn</span>
+                    </a>
+
+                    <a href="https://github.com/velychkodiana" target="_blank" rel="noreferrer" className="social-card" title="GitHub">
+                        <div className="social-icon-wrapper"><Github size={18} /></div>
+                        <span>GitHub</span>
+                    </a>
+                </div>
             </div>
 
-            <div style={{
-                display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2rem',
-                paddingTop: '2rem', borderTop: '1px solid var(--glass-border)', opacity: 0.8, fontSize: '0.9rem'
-            }}>
-                <div style={{ display: 'flex', gap: '2rem' }}>
-                    <a href="#" className="footer-link">LinkedIn</a>
-                    <a href="#" className="footer-link">GitHub</a>
-                    <a href="#" className="footer-link">Portfolio</a>
-                </div>
-
-                <div style={{ fontWeight: 500 }}>
-                    React + WebGL • OpenWeather API
-                </div>
-
-                <div>
-                    &copy; 2026 Dixna Velychko
-                </div>
+            {/* Нижній рядок: Копірайт та підпис */}
+            <div className="footer-bottom">
+                <p className="copyright-text">© {new Date().getFullYear()} AtmoScape.</p>
+                <p className="signature-text">
+                    Designed & Engineered with <span className="heart">♡</span> by <strong>Diana Velychko</strong>
+                </p>
             </div>
         </footer>
     );

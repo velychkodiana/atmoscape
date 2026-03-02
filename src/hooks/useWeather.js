@@ -1,50 +1,49 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 
-const API_KEY = '67566d6efcc2fbb713a253a7f791e97f'; // Твій ключ
+const API_KEY = '67566d6efcc2fbb713a253a7f791e97f';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0/direct';
 
 export function useWeather() {
     const [weatherData, setWeatherData] = useState(null);
     const [forecastData, setForecastData] = useState([]);
-    const [locationDetails, setLocationDetails] = useState(null); // Зберігаємо область/країну
+    const [locationDetails, setLocationDetails] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
 
-    // 1. ЖИВИЙ ПОШУК МІСТ (АВТОКОМПЛІТ)
     const getCitySuggestions = async (query) => {
         if (!query || query.length < 2) return [];
         try {
-            const res = await axios.get(GEO_URL, {
-                params: { q: query, limit: 5, appid: API_KEY }
-            });
-            return res.data; // Повертає масив: [{name, lat, lon, state, country}, ...]
-        } catch (err) {
-            console.error("Помилка автокомпліту:", err);
-            return [];
-        }
+            const res = await axios.get(GEO_URL, { params: { q: query, limit: 5, appid: API_KEY } });
+            return res.data;
+        } catch (err) { return []; }
     };
 
-    // 2. ГОЛОВНИЙ ЗАПИТ ПОГОДИ
-    // location параметром тепер може бути рядок ('Kyiv') АБО об'єкт з координатами ({lat, lon, name, state})
     const fetchWeather = useCallback(async (location, lang = 'ua') => {
         if (!location) return;
         setIsLoading(true);
-        setError(null);
-
         try {
-            let params = { appid: API_KEY, units: 'metric', lang };
+            const apiLang = lang === 'ua' ? 'uk' : 'en';
+            let targetLocation = location;
 
-            // Якщо нам передали об'єкт з координатами (ми вибрали місто зі списку)
-            if (typeof location === 'object' && location.lat) {
-                params.lat = location.lat;
-                params.lon = location.lon;
-                setLocationDetails(location); // Зберігаємо інфо про область
+            // 🔥 РОЗУМНИЙ ФІКС: Якщо клікнули на нижню картку (передали текст),
+            // ми спершу витягуємо повні дані з перекладом та областю!
+            if (typeof location === 'string') {
+                const geoRes = await axios.get(GEO_URL, { params: { q: location, limit: 1, appid: API_KEY } });
+                if (geoRes.data && geoRes.data.length > 0) {
+                    targetLocation = geoRes.data[0];
+                }
+            }
+
+            let params = { appid: API_KEY, units: 'metric', lang: apiLang };
+
+            if (typeof targetLocation === 'object' && targetLocation.lat) {
+                params.lat = targetLocation.lat;
+                params.lon = targetLocation.lon;
+                setLocationDetails(targetLocation);
             } else {
-                // Якщо це просто рядок (наприклад, дефолтне місто при старті)
-                params.q = location;
-                setLocationDetails({ name: location }); // Немає області, тільки ім'я
+                params.q = typeof location === 'string' ? location : location.name;
+                setLocationDetails({ name: params.q });
             }
 
             const currentRes = await axios.get(`${BASE_URL}/weather`, { params });
@@ -56,22 +55,13 @@ export function useWeather() {
                 const date = new Date(item.dt_txt);
                 const dayName = date.toLocaleDateString(lang === 'ua' ? 'uk-UA' : 'en-US', { weekday: 'short' });
                 return {
-                    id: item.dt,
-                    dayName: dayName.toUpperCase(),
-                    temp: Math.round(item.main.temp),
-                    icon: item.weather[0].icon,
-                    raw: item
+                    id: item.dt, dayName: dayName.toUpperCase(), temp: Math.round(item.main.temp), icon: item.weather[0].icon, raw: item
                 };
             });
 
             setForecastData(formattedForecast);
-        } catch (err) {
-            console.error('API Error:', err);
-            setError('Помилка завантаження даних');
-        } finally {
-            setIsLoading(false);
-        }
+        } catch (err) { console.error(err); } finally { setIsLoading(false); }
     }, []);
 
-    return { weatherData, forecastData, locationDetails, isLoading, error, fetchWeather, getCitySuggestions };
+    return { weatherData, forecastData, locationDetails, isLoading, fetchWeather, getCitySuggestions };
 }
