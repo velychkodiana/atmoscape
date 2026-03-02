@@ -58,6 +58,12 @@ const getWeatherIcon = (iconCode, size = 48) => {
 function App() {
     const { t, i18n } = useTranslation();
     const [lang, setLang] = useState('ua');
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     const [theme, setTheme] = useState('light');
     const [searchInput, setSearchInput] = useState('');
     const [currentCity, setCurrentCity] = useState('Kyiv');
@@ -165,6 +171,149 @@ function App() {
     } : null;
 
     const cityNameDisplay = getLocalName(locationDetails || weatherData?.name || currentCity);
+
+
+    if (isMobile) {
+        return (
+            <div className="app-layout mobile-layout">
+
+                {/* Шапка: тільки лого і кнопки */}
+                <header className="mobile-header">
+                    <h1 className="logo">AtmoScape</h1>
+                    <div className="controls">
+                        <button onClick={handleLangChange} className="control-btn">{lang.toUpperCase()}</button>
+                        <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} className="control-btn">
+                            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                        </button>
+                    </div>
+                </header>
+
+                {/* 3D МОДЕЛЬ (Зверху) */}
+                <div className="mobile-3d-wrapper">
+                    <ErrorBoundary key={cityNameDisplay} errorTitle={t('errorTitle')} errorDesc={t('errorDesc')} errorBtn={t('errorBtn')}>
+                        <Canvas camera={{ position: [0, 2, 12], fov: 45 }}>
+                            <WeatherEffects iconCode={displayData?.icon} />
+                            <Suspense fallback={null}>
+                                <CityModel modelUrl={getModelUrl(cityNameDisplay, locationDetails?.state)} />
+                                <Environment preset="city" />
+                            </Suspense>
+                        </Canvas>
+                    </ErrorBoundary>
+                </div>
+
+                {/* ГОЛОВНА ІНФА (Напливає на модель знизу) */}
+                <div className="mobile-main-card glass-panel">
+                    <h1 className="editorial-title">{cityNameDisplay}</h1>
+                    <div className="location-sub">
+                        {formatState(locationDetails?.state)}{locationDetails?.state ? ', ' : ''}{locationDetails?.country || weatherData?.sys?.country || ''}
+                    </div>
+                    <div className="editorial-temp">{displayData ? Math.round(displayData.temp) : '--'}°</div>
+                    <p className="editorial-desc" style={{ textTransform: 'capitalize' }}>
+                        {displayData?.description || '...'} • {t('feels')} {displayData ? Math.round(displayData.feels_like) : '--'}°
+                    </p>
+                </div>
+
+                {/* ПОШУК (Переміщено сюди!) */}
+                <div className="mobile-search-container glass-panel">
+                    <div className="search-container" style={{ width: '100%', maxWidth: '100%', margin: 0, border: 'none', background: 'transparent' }}>
+                        <Search size={18} className="search-icon" />
+                        <input
+                            type="text"
+                            placeholder={searchError ? t('notFound') : t('search')}
+                            className={`search-input ${searchError ? 'search-error' : ''}`}
+                            value={searchInput}
+                            onChange={(e) => { setSearchInput(e.target.value); if(searchError) setSearchError(false); }}
+                            onKeyDown={handleSearch}
+                            onClick={() => setIsSearchFocused(true)}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                            style={{ fontSize: '16px' }} /* Забороняє айфонам автоматично зумити екран */
+                        />
+                        {isSearchFocused && (suggestions.length > 0 || recentSearches.length > 0) && (
+                            <div className="recent-dropdown glass-panel" style={{ width: '100%', top: '100%', left: 0 }}>
+                                {searchInput.length > 2 ? (
+                                    <>
+                                        <div className="recent-header">{isTyping ? t('searching') : t('suggestions')}</div>
+                                        {suggestions.map((city, idx) => (
+                                            <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
+                                                <Search size={14} style={{ opacity: 0.5 }} />
+                                                <div className="recent-item-text">
+                                                    <span>{getLocalName(city)}</span>
+                                                    <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="recent-header">{t('recent')}</div>
+                                        {recentSearches.map((city, idx) => (
+                                            <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
+                                                <Clock size={14} style={{ opacity: 0.5 }} />
+                                                <div className="recent-item-text">
+                                                    <span>{getLocalName(city)}</span>
+                                                    <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ДЕТАЛІ (3 в ряд) */}
+                <div className="mobile-details-grid glass-panel">
+                    <div className="detail-item" style={{ flexDirection: 'column', padding: '10px' }}>
+                        <Wind size={20} style={{ marginBottom: '5px', opacity: 0.7 }}/>
+                        <div className="detail-label">{t('wind')}</div>
+                        <div className="detail-value">{displayData?.wind || '--'}</div>
+                    </div>
+                    <div className="detail-item" style={{ flexDirection: 'column', padding: '10px' }}>
+                        <Droplets size={20} style={{ marginBottom: '5px', opacity: 0.7 }}/>
+                        <div className="detail-label">{t('humidity')}</div>
+                        <div className="detail-value">{displayData?.humidity || '--'}%</div>
+                    </div>
+                    <div className="detail-item" style={{ flexDirection: 'column', padding: '10px' }}>
+                        <Gauge size={20} style={{ marginBottom: '5px', opacity: 0.7 }}/>
+                        <div className="detail-label">{t('pressure')}</div>
+                        <div className="detail-value">{displayData?.pressure || '--'}</div>
+                    </div>
+                </div>
+
+                {/* ПРОГНОЗ */}
+                <section className="forecast-wrapper mobile-forecast">
+                    <div className={`forecast-card glass-panel ${!selectedForecast ? 'active' : ''}`} onClick={() => setSelectedForecast(null)}>
+                        <span className="forecast-day" style={{fontSize:'0.75rem', marginBottom:'5px'}}>12:00</span>
+                        <span className="forecast-day">{t('today')}</span>
+                        <div className="forecast-icon" style={{margin:'10px 0'}}>{getWeatherIcon(weatherData?.weather[0].icon, 32)}</div>
+                        <span className="forecast-temp">{weatherData ? Math.round(weatherData.main.temp) : '--'}°</span>
+                    </div>
+                    {forecastData.map((day) => (
+                        <div key={day.id} className={`forecast-card glass-panel ${selectedForecast?.id === day.id ? 'active' : ''}`} onClick={() => setSelectedForecast(day)}>
+                            <span className="forecast-day" style={{fontSize:'0.75rem', marginBottom:'5px'}}>12:00</span>
+                            <span className="forecast-day">{day.dayName}</span>
+                            <div className="forecast-icon" style={{margin:'10px 0'}}>{getWeatherIcon(day.icon, 32)}</div>
+                            <span className="forecast-temp">{day.temp > 0 ? '+' : ''}{day.temp}°</span>
+                        </div>
+                    ))}
+                </section>
+
+                {/* НИЖНІ КАРТКИ (СТРОГО ПО 2 В РЯД) */}
+                <section className="mobile-bottom-grid">
+                    {['Kyiv', 'Lviv', 'Odesa', 'Kharkiv'].map((city) => (
+                        <MiniCityCard
+                            key={city} city={city}
+                            onClick={() => { setCurrentCity(city); setSelectedForecast(null); window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });}}
+                        />
+                    ))}
+                </section>
+
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <div className="app-layout">
