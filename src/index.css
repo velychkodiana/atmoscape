@@ -820,121 +820,128 @@ body::before {
 }
 
 /* ========================
-   MOBILE RESPONSIVENESS (Адаптивність)
+   REBUILD FOR MOBILE (Повна перебудова)
    ======================== */
 
-/* Для планшетів та невеликих ноутбуків */
-@media (max-width: 1024px) {
-  .hero-section {
-    grid-template-columns: 1fr; /* Робимо 1 колонку замість 2 */
-    gap: 2rem;
-  }
-
-  .hero-3d {
-    height: 50vh; /* Даємо 3D-моделі фіксовану висоту, щоб вона не зникала */
-    min-height: 350px;
-    border-radius: 24px;
-    overflow: hidden;
-  }
-}
-
-/* Для телефонів */
 @media (max-width: 768px) {
+  /* 1. Головний контейнер: прибираємо зайві відступи */
   .app-layout {
-    padding: 1rem; /* Зменшуємо відступи по краях екрану */
-    gap: 1.5rem;
+    padding: 10px;
+    gap: 15px;
+    height: auto;
+    overflow-x: hidden;
   }
 
-  /* Шапка сайту */
+  /* 2. Шапка: робимо компактною */
   .header-container {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 1rem;
-    gap: 1rem;
+    padding: 10px 15px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+  }
+  .logo { font-size: 1.2rem; }
+
+  /* 3. ГОЛОВНИЙ БЛОК: Перетворюємо на вертикальний стек */
+  .hero-section {
+    display: flex;
+    flex-direction: column; /* Все в один стовпчик */
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    gap: 15px;
   }
 
-  .search-container {
-    max-width: 100%;
-  }
-
-  .controls {
-    justify-content: flex-end;
-  }
-
-  /* Головний блок (Текст) */
+  /* 4. ТЕКСТОВА КАРТКА: Робимо її акуратною плашкою */
   .hero-text {
-    padding: 1.5rem;
+    order: 2; /* Текст буде ПІСЛЯ 3D моделі або над нею (за вибором) */
+    padding: 25px;
+    border-radius: 30px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    text-align: center;
   }
 
   .editorial-title {
-    font-size: clamp(2.5rem, 8vw, 4rem); /* Зменшуємо головний шрифт */
-    line-height: 1.1;
+    font-size: 2.2rem;
+    margin: 5px 0;
   }
 
-  /* Деталі погоди (вітер, вологість) */
+  .editorial-temp {
+    font-size: 4rem;
+    margin: 10px 0;
+  }
+
+  /* 5. 3D МОДЕЛЬ: Робимо її головним візуальним акцентом */
+  .hero-3d {
+    order: 1; /* Модель зверху */
+    height: 300px; /* Фіксована висота, щоб не "пливла" */
+    width: 100%;
+    background: var(--glass-bg);
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    position: relative;
+    touch-action: none; /* Щоб скрол сторінки не заважав крутити модель */
+  }
+
+  /* 6. ДЕТАЛІ: Робимо 3 в ряд, дуже дрібно */
   .details-grid {
-    grid-template-columns: repeat(3, 1fr); /* Ставимо їх в один рядок, але щільно */
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 20px;
   }
 
   .detail-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 5px;
+    border-radius: 15px;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 0.8rem 0.5rem;
+    gap: 5px;
   }
 
-  .detail-icon {
-    margin-right: 0;
-    margin-bottom: 0.5rem;
-  }
+  .detail-label { font-size: 0.65rem; }
+  .detail-value { font-size: 0.8rem; }
+  .detail-icon svg { width: 18px; height: 18px; }
 
-  /* Картки прогнозу (робимо їх скролом вбік) */
+  /* 7. ПРОГНОЗ: Горизонтальна стрічка, що не ламає екран */
   .forecast-wrapper {
-    justify-content: flex-start;
-    overflow-x: auto; /* Додаємо горизонтальний скрол */
-    padding-bottom: 1rem; /* Відступ для смуги прокрутки */
-    -webkit-overflow-scrolling: touch; /* Плавний скрол на iOS */
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 5px 0 15px 0;
+    gap: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Ховаємо скролбар */
   }
+  .forecast-wrapper::-webkit-scrollbar { display: none; }
 
   .forecast-card {
-    min-width: 80px; /* Фіксуємо ширину, щоб вони не стискалися */
+    min-width: 90px;
     flex-shrink: 0;
+    padding: 15px 10px;
   }
 
-  /* Нижні міні-картки міст */
+  /* 8. НИЖНІ КАРТКИ: 2 в ряд */
   .bottom-grid {
-    grid-template-columns: repeat(2, 1fr); /* Робимо 2 колонки замість 4 */
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .mini-city-card {
+    height: auto;
   }
 
   .mini-3d-placeholder {
-    height: 120px; /* Робимо фон для 3D трохи меншим */
-  }
-
-  .mini-city-info {
-    padding: 1rem;
+    height: 100px;
   }
 }
 
-/* Для дуже вузьких телефонів */
-@media (max-width: 480px) {
-  .bottom-grid {
-    grid-template-columns: 1fr; /* Робимо 1 колонку (картки одна під одною) */
-  }
-
-  .details-grid {
-    grid-template-columns: 1fr; /* Деталі теж одна під одною */
-  }
-
-  .detail-item {
-    flex-direction: row;
-    justify-content: flex-start;
-    text-align: left;
-  }
-
-  .detail-icon {
-    margin-right: 15px;
-    margin-bottom: 0;
-  }
+/* Додатковий фікс для зовсім маленьких екранів */
+@media (max-width: 380px) {
+  .editorial-title { font-size: 1.8rem; }
+  .editorial-temp { font-size: 3rem; }
+  .bottom-grid { grid-template-columns: 1fr; }
 }
