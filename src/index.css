@@ -964,3 +964,57 @@ body::before {
     height: 14px;
   }
 }
+
+/* ========================
+   ЖОРСТКІ ФІКСИ ДЛЯ МОБІЛОК
+   ======================== */
+
+/* 1. Забороняємо будь-чому вилазити за екран */
+html, body, #root, .app-layout {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.mobile-layout-clean * {
+  box-sizing: border-box !important;
+}
+
+/* 2. Фікс деталей (Вітер, Вологість, Тиск) - тепер вони рівно по центру */
+.mobile-details-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* Примусово рівні колонки */
+  gap: 5px;
+  padding: 10px 0 0 0;
+  margin: 10px 0 0 0;
+}
+
+.mobile-details-grid .detail-item {
+  width: 100%;
+  padding: 5px;
+  text-align: center;
+}
+
+/* 3. Прибираємо "вікно у вікні" для штормового попередження */
+.mobile-hero-3d .error-page-wrapper {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: inherit;
+  background: transparent; /* Прибираємо зайвий фон */
+  backdrop-filter: none;
+}
+
+.mobile-hero-3d .error-glass {
+  box-shadow: none;
+  border: none;
+  background: transparent;
+  padding: 1rem;
+}
+
+/* 4. Прибираємо зайвий прямокутник під прогнозом */
+.mobile-forecast {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}

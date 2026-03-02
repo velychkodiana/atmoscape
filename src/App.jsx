@@ -66,7 +66,10 @@ function App() {
     }, []);
     const [theme, setTheme] = useState('light');
     const [searchInput, setSearchInput] = useState('');
-    const [currentCity, setCurrentCity] = useState('Kyiv');
+    // Підтягуємо останнє місто з пам'яті (або ставимо Київ за замовчуванням)
+    const [currentCity, setCurrentCity] = useState(() => {
+        return localStorage.getItem('atmoscape_last_city') || 'Kyiv';
+    });
     const [selectedForecast, setSelectedForecast] = useState(null);
     const [searchError, setSearchError] = useState(false);
 
@@ -135,6 +138,11 @@ function App() {
 
     const handleCitySelect = useCallback((cityObj) => {
         setCurrentCity(cityObj);
+
+        // 🔥 Зберігаємо в пам'ять при кожному новому пошуку
+        const cityName = typeof cityObj === 'string' ? cityObj : cityObj.name;
+        localStorage.setItem('atmoscape_last_city', cityName);
+
         setSearchInput('');
         setIsSearchFocused(false);
         setSelectedForecast(null);
@@ -178,17 +186,16 @@ function App() {
         return (
             <div className="app-layout mobile-layout-clean">
 
-                {/* ШАПКА: Логотип, Перемикачі та Пошук */}
-                <header className="glass-panel mobile-header-clean">
-                    <div className="mobile-header-top">
-                        <h1 className="logo">AtmoScape</h1>
-                        <div className="controls">
-                            <button onClick={handleLangChange} className="control-btn">{lang.toUpperCase()}</button>
-                            <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} className="control-btn">
-                                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                            </button>
-                        </div>
+                {/* 1. ШАПКА: Тільки Логотип і Перемикачі */}
+                <header className="mobile-header-top glass-panel" style={{ padding: '15px', borderRadius: '20px' }}>
+                    <h1 className="logo" style={{ margin: 0 }}>AtmoScape</h1>
+                    <div className="controls">
+                        <button onClick={handleLangChange} className="control-btn">{lang.toUpperCase()}</button>
+                        <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} className="control-btn">
+                            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                        </button>
                     </div>
+                </header>
 
                     <div className="search-container mobile-search" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
                         <Search size={18} className="search-icon" />
@@ -237,7 +244,7 @@ function App() {
                             </div>
                         )}
                     </div>
-                </header>
+
 
                 {/* ТЕКСТ (КОМПАКТНИЙ ТА СТАБІЛЬНИЙ) */}
                 <main className="mobile-hero-text glass-panel">

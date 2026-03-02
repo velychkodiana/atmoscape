@@ -43,10 +43,12 @@ function Particles({ type }) {
                 />
             </bufferGeometry>
             <pointsMaterial
-                size={type === 'rain' ? 0.05 : 0.1}
+                // 🔥 Зменшуємо сніг з 0.1 до 0.035
+                size={type === 'rain' ? 0.05 : 0.035}
                 color={type === 'rain' ? '#aaaaaa' : '#ffffff'}
                 transparent
-                opacity={0.6}
+                // Робимо сніг трохи яскравішим (0.8), щоб ці дрібні частинки було добре видно
+                opacity={type === 'rain' ? 0.6 : 0.8}
                 sizeAttenuation
             />
         </points>
