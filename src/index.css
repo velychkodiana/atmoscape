@@ -900,3 +900,67 @@ body::before {
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
+
+/* ========================
+   MOBILE FIXES (Фікси відступів та багів)
+   ======================== */
+
+/* 1. Захист від того, щоб блоки "лізли вправо" */
+.mobile-layout-clean,
+.mobile-hero-text,
+.mobile-hero-3d {
+  width: 100%;
+  box-sizing: border-box; /* Змушує відступи рости всередину, а не назовні */
+  overflow-x: hidden;
+}
+
+/* 2. Фікс 3D-моделі (щоб не відлітала при торканні) */
+.mobile-hero-3d {
+  touch-action: none; /* Забороняє браузеру скролити екран, коли ти крутиш модель */
+}
+
+/* 3. Фікси для глобальних компонентів на телефоні */
+@media (max-width: 768px) {
+
+  /* Фікс: Повідомлення про шторм (щоб вміщувалося) */
+  .error-glass {
+    padding: 2rem 1.5rem;
+    width: 90%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .error-title { font-size: 1.5rem; }
+  .error-text { font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+  /* Фікс: Футер (щоб не ліз вправо) */
+  .footer-wrapper {
+    padding: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 1rem;
+  }
+
+  /* Фікс: 4 кнопки футера (суворо по 2 в ряд) */
+  .social-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+
+  /* Робимо самі кнопки акуратнішими для телефону */
+  .social-card {
+    padding: 8px;
+    justify-content: center;
+    font-size: 0.8rem;
+  }
+
+  .social-icon-wrapper {
+    width: 28px;
+    height: 28px;
+  }
+  .social-icon-wrapper svg {
+    width: 14px;
+    height: 14px;
+  }
+}
