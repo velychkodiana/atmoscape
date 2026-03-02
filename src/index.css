@@ -742,14 +742,14 @@ body::before {
   justify-content: center;
   padding: 2rem;
   z-index: 100;
-  /* М'який фон, щоб відділити помилку від основного контенту */
+  /* М'який фон, щоб відділити помилку від основного контенту
   background: radial-gradient(circle at center, rgba(167, 139, 250, 0.05) 0%, rgba(255,255,255,0.4) 100%);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);*/
 }
 
-[data-theme='dark'] .error-page-wrapper {
+/*[data-theme='dark'] .error-page-wrapper {
   background: radial-gradient(circle at center, rgba(196, 181, 253, 0.05) 0%, rgba(15, 17, 21, 0.6) 100%);
-}
+}*/
 
 .error-glass {
   display: flex;
@@ -1013,8 +1013,25 @@ html, body, #root, .app-layout {
 }
 
 /* 4. Прибираємо зайвий прямокутник під прогнозом */
+.forecast-wrapper,
 .mobile-forecast {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
+  margin: 0 !important;
+}
+
+/* Жорстке центрування мобільного пошуку */
+.mobile-search {
+  margin: 0 auto !important; /* Ставить блок рівно по центру екрану */
+  display: flex !important;
+  justify-content: center !important; /* Центрує вміст всередині */
+  width: 90% !important; /* Щоб він не прилипав до країв телефону */
+}
+
+/* Робимо сам рядок вводу на 100% доступної ширини всередині овалу */
+.mobile-search .search-input {
+  flex-grow: 1;
+  text-align: left;
 }
