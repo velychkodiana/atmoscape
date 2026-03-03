@@ -2,7 +2,7 @@
 export const cloudModels = {
     kyiv: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/kyiv.glb?alt=media&token=ebb32162-3d23-4a26-956f-a7c179076cde',
     lviv: 'ТУТ_ПОСИЛАННЯ_НА_ЛЬВІВ_З_FIREBASE',
-    odesa: 'ТУТ_ПОСИЛАННЯ_НА_ОДЕСУ_З_FIREBASE',
+    odesa: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/odesa.glb?alt=media&token=f84e6102-c685-4c7a-91c7-b71673c3d925',
     kharkiv: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/kharkiv.glb?alt=media&token=0d6e780d-61a8-491c-9f32-27300b60c31b',
     // Додавай нові міста сюди:
     // poltava: 'https://firebasestorage...',
