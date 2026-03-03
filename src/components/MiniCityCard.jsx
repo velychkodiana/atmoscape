@@ -52,23 +52,31 @@ export default function MiniCityCard({ city, onClick }) {
     }, [city, i18n.language]);
 
     return (
-        <div className="mini-city-card glass-panel" onClick={onClick}>
-            <div className="mini-3d-placeholder">
-                <CardErrorBoundary fallbackText={t('modelMissing')}>
-                    <Canvas camera={{ position: [0, 2, 10], fov: 45 }}>
-                        <ambientLight intensity={1.5} />
-                        <directionalLight position={[10, 10, 5]} intensity={1} />
-                        <Suspense fallback={null}>
-                            <CityModel modelUrl={dynamicModelUrl} />
-                        </Suspense>
-                    </Canvas>
-                </CardErrorBoundary>
-            </div>
 
-            <div className="mini-city-info">
-                <span className="mini-city-name">{localName}</span>
-                <span className="mini-city-temp">{temp !== null ? `${temp > 0 ? '+' : ''}${temp}°` : '...'}</span>
-            </div>
+    <div
+        className="mini-city-card glass-panel"
+        onClick={onClick}
+        onTouchStart={() => {}}
+    >
+
+        <div className="mini-3d-placeholder">
+            <CardErrorBoundary fallbackText={t('modelMissing')}>
+                <Canvas camera={{ position: [0, 2, 10], fov: 45 }}
+                        style={{ pointerEvents: 'none' }}>
+                    <ambientLight intensity={1.5} />
+                    <directionalLight position={[10, 10, 5]} intensity={1} />
+                    <Suspense fallback={null}>
+                        <CityModel modelUrl={dynamicModelUrl} isMini={true} />
+                    </Suspense>
+                </Canvas>
+            </CardErrorBoundary>
         </div>
-    );
+
+
+        <div className="mini-city-info">
+            <span className="mini-city-name">{localName}</span>
+            <span className="mini-city-temp">{temp !== null ? `${temp > 0 ? '+' : ''}${temp}°` : '...'}</span>
+        </div>
+    </div>
+);
 }
