@@ -1,170 +1,68 @@
 import React, { useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
-import { Sun, Moon, Cloud, CloudRain, CloudLightning, Snowflake, CloudFog, Wind, Droplets, Gauge, Search, Clock, CloudOff } from 'lucide-react';
-
-import './i18n';
 import { useTranslation } from 'react-i18next';
+import './i18n';
+import './index.css';
 
+// 🧩 НАШІ НОВІ ЧИСТІ КОМПОНЕНТИ ТА УТИЛІТИ
+import { getLocalName } from './utils/helpers';
+import HeaderControls from './components/ui/HeaderControls';
+import SearchBar from './components/ui/SearchBar';
+import ErrorBoundary from './components/ui/ErrorBoundary';
+import HeroWeather from './components/weather/HeroWeather';
+import ForecastList from './components/weather/ForecastList';
+import MobileLayout from './layouts/MobileLayout';
+import DesktopLayout from './layouts/DesktopLayout';
+
+// 🎨 ІНШІ БЛОКИ ТА 3D
 import CityModel from './canvas/CityModel';
 import WeatherEffects from './canvas/WeatherEffects';
 import MiniCityCard from './components/MiniCityCard';
 import Footer from './components/Footer';
-import { useWeather } from './hooks/useWeather';
 import ModelLoader from './components/ModelLoader';
-import NotFound from './components/NotFound';
+import NotFound from './components/NotFound'; // або './pages/NotFound'
 
-// ІМПОРТУЄМО НОВУ ХМАРНУ ЛОГІКУ З КОНФІГУ
+// ⚙️ ЛОГІКА ТА КОНФІГИ
+import { useWeather } from './hooks/useWeather';
 import { getModelUrl } from './config/models';
 
-import './index.css';
-
-// Подушка безпеки з перекладом
-class ErrorBoundary extends React.Component {
-    constructor(props) { super(props); this.state = { hasError: false }; }
-    static getDerivedStateFromError() { return { hasError: true }; }
-
-    render() {
-        if (this.state.hasError) {
-            return (
-                <div className="error-page-wrapper">
-                    <div className="glass-panel error-glass">
-                        <div className="error-icon-wrapper">
-                            <CloudOff size={64} strokeWidth={1.5} />
-                        </div>
-                        <h1 className="error-title">{this.props.errorTitle}</h1>
-                        <p className="error-text">{this.props.errorDesc}</p>
-                        <button className="error-btn" onClick={() => window.location.reload()}>
-                            {this.props.errorBtn}
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-        return this.props.children;
-    }
-}
-
-const getWeatherIcon = (iconCode, size = 48) => {
-    if (!iconCode) return <Cloud size={size} strokeWidth={1.5} />;
-    const code = iconCode.toLowerCase();
-    if (code.includes('01')) return <Sun size={size} strokeWidth={1.5} />;
-    if (code.includes('02') || code.includes('03') || code.includes('04')) return <Cloud size={size} strokeWidth={1.5} />;
-    if (code.includes('09') || code.includes('10')) return <CloudRain size={size} strokeWidth={1.5} />;
-    if (code.includes('11')) return <CloudLightning size={size} strokeWidth={1.5} />;
-    if (code.includes('13')) return <Snowflake size={size} strokeWidth={1.5} />;
-    if (code.includes('50')) return <CloudFog size={size} strokeWidth={1.5} />;
-    return <Cloud size={size} strokeWidth={1.5} />;
-};
-
 function App() {
+    // 1. СТАН (STATE) ДОДАТКУ
     const { t, i18n } = useTranslation();
     const [lang, setLang] = useState('ua');
+    const [theme, setTheme] = useState('light');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
+    const [currentCity, setCurrentCity] = useState(() => localStorage.getItem('atmoscape_last_city') || 'Kyiv');
+    const [selectedForecast, setSelectedForecast] = useState(null);
+    const [hasError, setHasError] = useState(false);
+
+    // Стан пошуку
+    const [searchInput, setSearchInput] = useState('');
+    const [searchError, setSearchError] = useState(false);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [recentSearches, setRecentSearches] = useState(() => {
+        const saved = localStorage.getItem('atmoscape_recent');
+        return saved ? JSON.parse(saved) : [{name: 'London', country: 'GB'}, {name: 'Kyiv', local_names: {uk: 'Київ'}, country: 'UA'}];
+    });
+
+    // 2. ХУК ПОГОДИ
+    const { weatherData, forecastData, locationDetails, isLoading, fetchWeather, getCitySuggestions } = useWeather();
+
+    // 3. ЕФЕКТИ (ЖИТТЄВИЙ ЦИКЛ)
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const [theme, setTheme] = useState('light');
-    const [searchInput, setSearchInput] = useState('');
+    useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
 
-    // Підтягуємо останнє місто з пам'яті (або ставимо Київ за замовчуванням)
-    const [currentCity, setCurrentCity] = useState(() => {
-        return localStorage.getItem('atmoscape_last_city') || 'Kyiv';
-    });
-    const [selectedForecast, setSelectedForecast] = useState(null);
-
-    const [searchError, setSearchError] = useState(false);
-    const [hasError, setHasError] = useState(false);       // 🔥 НАШ НОВИЙ СТАН ДЛЯ СТОРІНКИ 404
-
-    const [isSearchFocused, setIsSearchFocused] = useState(false);
-    const [recentSearches, setRecentSearches] = useState(() => {
-        const saved = localStorage.getItem('atmoscape_recent');
-        return saved ? JSON.parse(saved) : [{name: 'London', country: 'GB'}, {name: 'Kyiv', local_names: {uk: 'Київ'}, country: 'UA'}];
-    });
-
-    const [suggestions, setSuggestions] = useState([]);
-    const [isTyping, setIsTyping] = useState(false);
-
-    const { weatherData, forecastData, locationDetails, isLoading, fetchWeather, getCitySuggestions } = useWeather();
-
-    const handleLangChange = () => {
-        const newLang = lang === 'ua' ? 'en' : 'ua';
-        setLang(newLang);
-        i18n.changeLanguage(newLang);
-        setSelectedForecast(null);
-    };
-
-    const getLocalName = (cityObj) => {
-        if (!cityObj) return '';
-        if (typeof cityObj === 'string') return cityObj;
-        const langKey = lang === 'ua' ? 'uk' : 'en';
-        return cityObj.local_names?.[langKey] || cityObj.name;
-    };
-
-    const formatState = (stateStr) => {
-        if (!stateStr) return '';
-        if (lang === 'ua') {
-            const normalized = stateStr.toLowerCase().trim();
-
-            //
-            const stateMap = {
-                'kharkiv oblast': 'Харківська область', 'odesa oblast': 'Одеська область', 'kyiv oblast': 'Київська область',
-                'kyiv city': 'м. Київ', 'kyiv': 'м. Київ', 'lviv oblast': 'Львівська область', 'dnipropetrovsk oblast': 'Дніпропетровська область',
-                'donetsk oblast': 'Донецька область', 'zaporizhia oblast': 'Запорізька область', 'zaporizhzhia oblast': 'Запорізька область',
-                'mykolaiv oblast': 'Миколаївська область', 'kherson oblast': 'Херсонська область', 'poltava oblast': 'Полтавська область',
-                'chernihiv oblast': 'Чернігівська область', 'cherkasy oblast': 'Черкаська область', 'zhytomyr oblast': 'Житомирська область',
-                'sumy oblast': 'Сумська область', 'khmelnytskyi oblast': 'Хмельницька область', 'chernivtsi oblast': 'Чернівецька область',
-                'rivne oblast': 'Рівненська область', 'ivano-frankivsk oblast': 'Івано-Франківська область', 'ternopil oblast': 'Тернопільська область',
-                'volyn oblast': 'Волинська область', 'zakarpattia oblast': 'Закарпатська область', 'kirovohrad oblast': 'Кіровоградська область',
-                'luhansk oblast': 'Луганська область', 'crimea': 'АР Крим', 'autonomous republic of crimea': 'АР Крим',
-                'sevastopol': 'м. Севастополь', 'sevastopol city': 'м. Севастополь'
-            };
-
-            // Якщо є точний збіг — одразу віддаємо
-            if (stateMap[normalized]) return stateMap[normalized];
-
-            // 2. ЗАПАСНИЙ ПАРАШУТ (якщо API видало "Kharkivs'ka" чи "Odes'ka")
-            if (normalized.includes('kyiv') || normalized.includes('kiev')) return 'Київська область';
-            if (normalized.includes('kharkiv') || normalized.includes('kharkov')) return 'Харківська область';
-            if (normalized.includes('odes')) return 'Одеська область';
-            if (normalized.includes('lviv') || normalized.includes('lvov')) return 'Львівська область';
-            if (normalized.includes('dnipro') || normalized.includes('dnep')) return 'Дніпропетровська область';
-            if (normalized.includes('donetsk') || normalized.includes('donbas')) return 'Донецька область';
-            if (normalized.includes('zaporizh')) return 'Запорізька область';
-            if (normalized.includes('mykolaiv') || normalized.includes('nikolaev')) return 'Миколаївська область';
-            if (normalized.includes('kherson')) return 'Херсонська область';
-            if (normalized.includes('poltav')) return 'Полтавська область';
-            if (normalized.includes('chernihiv') || normalized.includes('chernigov')) return 'Чернігівська область';
-            if (normalized.includes('cherkas')) return 'Черкаська область';
-            if (normalized.includes('zhytomyr') || normalized.includes('zhitomir')) return 'Житомирська область';
-            if (normalized.includes('sumy') || normalized.includes('sumsk')) return 'Сумська область';
-            if (normalized.includes('khmelnyt')) return 'Хмельницька область';
-            if (normalized.includes('chernivts') || normalized.includes('chernovts')) return 'Чернівецька область';
-            if (normalized.includes('rivn') || normalized.includes('rovn')) return 'Рівненська область';
-            if (normalized.includes('frankivsk')) return 'Івано-Франківська область';
-            if (normalized.includes('ternopil')) return 'Тернопільська область';
-            if (normalized.includes('volyn') || normalized.includes('lutsk')) return 'Волинська область';
-            if (normalized.includes('zakarpatt') || normalized.includes('transcarpathia')) return 'Закарпатська область';
-            if (normalized.includes('kirovohrad') || normalized.includes('kropyvnyts')) return 'Кіровоградська область';
-            if (normalized.includes('luhansk') || normalized.includes('lugansk')) return 'Луганська область';
-            if (normalized.includes('vinnyts') || normalized.includes('vinnits')) return 'Вінницька область';
-            if (normalized.includes('crimea') || normalized.includes('krymska')) return 'АР Крим';
-
-            // 3. Для закордонних міст
-            return stateStr
-                .replace(/Oblast/ig, 'область')
-                .replace(/City/ig, 'місто')
-                .replace(/State/ig, 'штат')
-                .replace(/Province/ig, 'провінція');
-        }
-        return stateStr;
-    };
-
-    useEffect(() => { fetchWeather(currentCity, lang); }, [currentCity, lang, fetchWeather]);
+    // 🔥 ФІКС 1: Залишили тільки [currentCity, lang]
+    useEffect(() => { fetchWeather(currentCity, lang); }, [currentCity, lang]);
 
     useEffect(() => {
         const fetchGeo = async () => {
@@ -177,23 +75,25 @@ function App() {
         };
         const timeoutId = setTimeout(fetchGeo, 400);
         return () => clearTimeout(timeoutId);
-    }, [searchInput]);
+    }, [searchInput]); // ПРИБРАЛИ звідси getCitySuggestions
 
-    useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+    // 4. ОБРОБНИКИ ПОДІЙ
+    const handleLangChange = () => {
+        const newLang = lang === 'ua' ? 'en' : 'ua';
+        setLang(newLang);
+        i18n.changeLanguage(newLang);
+        setSelectedForecast(null);
+    };
 
     const handleCitySelect = useCallback((cityObj) => {
-        setHasError(false); // 🔥 Скидаємо помилку 404 при новому виборі
+        setHasError(false);
         setCurrentCity(cityObj);
-
-        // Зберігаємо в пам'ять при кожному новому пошуку
         const cityName = typeof cityObj === 'string' ? cityObj : cityObj.name;
         localStorage.setItem('atmoscape_last_city', cityName);
-
         setSearchInput('');
         setIsSearchFocused(false);
         setSelectedForecast(null);
         setSearchError(false);
-
         setRecentSearches(prev => {
             const updated = [cityObj, ...prev.filter(c => c.name !== cityObj.name)].slice(0, 5);
             localStorage.setItem('atmoscape_recent', JSON.stringify(updated));
@@ -203,22 +103,23 @@ function App() {
 
     const handleSearch = async (e) => {
         if (e.key === 'Enter' && searchInput.trim() !== '') {
-            setHasError(false); // 🔥 Скидаємо перед пошуком
+            setHasError(false);
             try {
                 const results = await getCitySuggestions(searchInput);
                 if (results && results.length > 0) {
                     handleCitySelect(results[0]);
                 } else {
                     setSearchError(true);
-                    setHasError(true); // 🔥 Вмикаємо 404, якщо місто не знайдено
+                    setHasError(true);
                     setTimeout(() => setSearchError(false), 2500);
                 }
             } catch (error) {
-                setHasError(true); // 🔥 Вмикаємо 404 при помилці API
+                setHasError(true);
             }
         }
     };
 
+    // 5. ПІДГОТОВКА ДАНИХ ДЛЯ ВІДОБРАЖЕННЯ
     const displayData = selectedForecast ? {
         temp: selectedForecast.temp, description: selectedForecast.raw.weather[0].description,
         feels_like: selectedForecast.raw.main.feels_like, wind: selectedForecast.raw.wind?.speed || selectedForecast.raw.wind_speed,
@@ -231,328 +132,71 @@ function App() {
         icon: weatherData.weather[0].icon, dateLabel: t('today')
     } : null;
 
-    const cityNameDisplay = getLocalName(locationDetails || weatherData?.name || currentCity);
+    const cityNameDisplay = getLocalName(locationDetails || weatherData?.name || currentCity, lang);
 
+    // 6. ПЕРЕВІРКА НА КРИТИЧНУ ПОМИЛКУ
+    if (hasError) return <NotFound />;
 
-    // 🔥 ЯКЩО ПОМИЛКА — МАЛЮЄМО СТОРІНКУ 404
-    if (hasError) {
-        return <NotFound />;
-    }
+    // ==========================================
+    // 7. КОМПОЗИЦІЯ (Збираємо UI як конструктор Lego)
+    // ==========================================
 
-    //  ЧИСТА МОБІЛЬНА ВЕРСІЯ (Рендериться тільки на телефонах)
-    if (isMobile) {
-        return (
-            <div className="app-layout mobile-layout-clean">
+    const headerControlsSlot = <HeaderControls lang={lang} handleLangChange={handleLangChange} theme={theme} setTheme={setTheme} />;
 
-                {/* 1. ШАПКА: Тільки Логотип і Перемикачі */}
-                <header className="mobile-header-top glass-panel" style={{ padding: '15px', borderRadius: '20px' }}>
-                    <h1 className="logo" style={{ margin: 0 }}>AtmoScape</h1>
-                    <div className="controls">
-                        <button onClick={handleLangChange} className="control-btn">{lang.toUpperCase()}</button>
-                        <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} className="control-btn">
-                            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                        </button>
-                    </div>
-                </header>
+    const searchBarSlot = <SearchBar isMobile={isMobile} t={t} lang={lang} searchError={searchError} setSearchError={setSearchError} searchInput={searchInput} setSearchInput={setSearchInput} handleSearch={handleSearch} isSearchFocused={isSearchFocused} setIsSearchFocused={setIsSearchFocused} suggestions={suggestions} recentSearches={recentSearches} isTyping={isTyping} handleCitySelect={handleCitySelect} />;
 
-                <div className="search-container mobile-search" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
-                    <Search size={18} className="search-icon" />
-                    <input
-                        type="text"
-                        placeholder={searchError ? t('notFound') : t('search')}
-                        className={`search-input ${searchError ? 'search-error' : ''}`}
-                        value={searchInput}
-                        onChange={(e) => { setSearchInput(e.target.value); if(searchError) setSearchError(false); }}
-                        onKeyDown={handleSearch}
-                        onClick={() => setIsSearchFocused(true)}
-                        onFocus={() => setIsSearchFocused(true)}
-                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                        style={{ fontSize: '16px' }}
-                    />
-                    {isSearchFocused && (suggestions.length > 0 || recentSearches.length > 0) && (
-                        <div className="recent-dropdown glass-panel" style={{ width: '100%', top: '100%', left: 0, zIndex: 50 }}>
-                            {searchInput.length > 2 ? (
-                                <>
-                                    <div className="recent-header">{isTyping ? t('searching') : t('suggestions')}</div>
-                                    {suggestions.map((city, idx) => (
-                                        <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
-                                            <Search size={14} style={{ opacity: 0.5 }} />
-                                            <div className="recent-item-text">
-                                                <span>{getLocalName(city)}</span>
-                                                <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </>
-                            ) : (
-                                <>
-                                    <div className="recent-header">{t('recent')}</div>
-                                    {recentSearches.map((city, idx) => (
-                                        <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
-                                            <Clock size={14} style={{ opacity: 0.5 }} />
-                                            <div className="recent-item-text">
-                                                <span>{getLocalName(city)}</span>
-                                                <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
+    const heroTextSlot = <HeroWeather displayData={displayData} isLoading={isLoading} cityNameDisplay={cityNameDisplay} locationDetails={locationDetails} weatherData={weatherData} t={t} lang={lang} isMobile={isMobile} />;
 
-                {/* ТЕКСТ (КОМПАКТНИЙ ТА СТАБІЛЬНИЙ) */}
-                <main className="mobile-hero-text glass-panel">
-                    <div className="editorial-date">{displayData?.dateLabel || <div className="skeleton skeleton-desc" style={{width: '100px', margin: '0 auto'}}></div>}</div>
+    // 🔥 ФІКС 2: Створюємо стабільний ключ, який не блимає при завантаженні API
+    const safeKey = typeof currentCity === 'string' ? currentCity : currentCity?.name || 'default';
 
-                    {isLoading ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                            <div className="skeleton skeleton-title" style={{ height: '40px', width: '60%' }}></div>
-                            <div className="skeleton skeleton-temp" style={{ height: '60px', width: '40%' }}></div>
-                            <div className="skeleton skeleton-desc" style={{ height: '20px', width: '80%' }}></div>
-                        </div>
-                    ) : (
-                        <>
-                            <h1 className="editorial-title">{cityNameDisplay}</h1>
-                            <div className="location-sub">
-                                {formatState(locationDetails?.state)}{locationDetails?.state ? ', ' : ''}{locationDetails?.country || weatherData?.sys?.country || ''}
-                            </div>
-                            <div className="editorial-temp">{displayData ? Math.round(displayData.temp) : '--'}°</div>
-                            <p className="editorial-desc" style={{ textTransform: 'capitalize' }}>
-                                {displayData?.description || '...'} • {t('feels')} {displayData ? Math.round(displayData.feels_like) : '--'}°
-                            </p>
-                        </>
-                    )}
-
-                    <div className="mobile-details-grid">
-                        <div className="detail-item">
-                            <span className="detail-icon"><Wind size={18} /></span>
-                            <div className="detail-label">{t('wind')}</div>
-                            <div className="detail-value">{displayData?.wind || '--'}</div>
-                        </div>
-                        <div className="detail-item">
-                            <span className="detail-icon"><Droplets size={18} /></span>
-                            <div className="detail-label">{t('humidity')}</div>
-                            <div className="detail-value">{displayData?.humidity || '--'}%</div>
-                        </div>
-                        <div className="detail-item">
-                            <span className="detail-icon"><Gauge size={18} /></span>
-                            <div className="detail-label">{t('pressure')}</div>
-                            <div className="detail-value">{displayData?.pressure || '--'}</div>
-                        </div>
-                    </div>
-                </main>
-
-                {/* 3D МОДЕЛЬ (ВЕЛИКА) */}
-                <div className="mobile-hero-3d glass-panel">
-                    <ErrorBoundary key={cityNameDisplay} errorTitle={t('errorTitle')} errorDesc={t('errorDesc')} errorBtn={t('errorBtn')}>
-                        <Canvas camera={{ position: [0, 2, 12], fov: 45 }}>
-                            <WeatherEffects iconCode={displayData?.icon} />
-                            <Suspense fallback={<ModelLoader isMain />}>
-                                <CityModel modelUrl={getModelUrl(cityNameDisplay, locationDetails?.state)} />
-                                <Environment preset="city" />
-                            </Suspense>
-                        </Canvas>
-                    </ErrorBoundary>
-                </div>
-
-                {/* ПРОГНОЗ ГОРИЗОНТАЛЬНИЙ */}
-                <section className="forecast-wrapper mobile-forecast">
-                    <div className={`forecast-card glass-panel ${!selectedForecast ? 'active' : ''}`} onClick={() => setSelectedForecast(null)}>
-                        <span className="forecast-day" style={{fontSize:'0.75rem', marginBottom:'5px'}}>12:00</span>
-                        <span className="forecast-day">{t('today')}</span>
-                        <div className="forecast-icon" style={{margin:'10px 0'}}>{getWeatherIcon(weatherData?.weather[0].icon, 32)}</div>
-                        <span className="forecast-temp">{weatherData ? Math.round(weatherData.main.temp) : '--'}°</span>
-                    </div>
-                    {forecastData.map((day) => (
-                        <div key={day.id} className={`forecast-card glass-panel ${selectedForecast?.id === day.id ? 'active' : ''}`} onClick={() => setSelectedForecast(day)}>
-                            <span className="forecast-day" style={{fontSize:'0.75rem', marginBottom:'5px'}}>12:00</span>
-                            <span className="forecast-day">{day.dayName}</span>
-                            <div className="forecast-icon" style={{margin:'10px 0'}}>{getWeatherIcon(day.icon, 32)}</div>
-                            <span className="forecast-temp">{day.temp > 0 ? '+' : ''}{day.temp}°</span>
-                        </div>
-                    ))}
-                </section>
-
-                {/* НИЖНІ КАРТКИ ПО 2 В РЯД */}
-                <section className="mobile-bottom-grid">
-                    {['Kyiv', 'Lviv', 'Odesa', 'Kharkiv'].map((city) => (
-                        <MiniCityCard
-                            key={city} city={city}
-                            onClick={() => { setCurrentCity(city); setSelectedForecast(null); window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });}}
-                        />
-                    ))}
-                </section>
-
-                <Footer />
-            </div>
-        );
-    }
-
-    return (
-        <div className="app-layout">
-            {/* HEADER */}
-            <header className="glass-panel header-container">
-                <h1 className="logo">AtmoScape</h1>
-                <div className="search-container">
-                    <Search size={18} className="search-icon" />
-                    <input
-                        type="text"
-                        placeholder={searchError ? t('notFound') : t('search')}
-                        className={`search-input ${searchError ? 'search-error' : ''}`}
-                        value={searchInput}
-                        onChange={(e) => { setSearchInput(e.target.value); if(searchError) setSearchError(false); }}
-                        onKeyDown={handleSearch}
-                        onClick={() => setIsSearchFocused(true)}
-                        onFocus={() => setIsSearchFocused(true)}
-                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                    />
-                    {isSearchFocused && (suggestions.length > 0 || recentSearches.length > 0) && (
-                        <div className="recent-dropdown glass-panel">
-                            {searchInput.length > 2 ? (
-                                <>
-                                    <div className="recent-header">{isTyping ? t('searching') : t('suggestions')}</div>
-                                    {suggestions.map((city, idx) => (
-                                        <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
-                                            <Search size={14} style={{ opacity: 0.5 }} />
-                                            <div className="recent-item-text">
-                                                <span>{getLocalName(city)}</span>
-                                                <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </>
-                            ) : (
-                                <>
-                                    <div className="recent-header">{t('recent')}</div>
-                                    {recentSearches.map((city, idx) => (
-                                        <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
-                                            <Clock size={14} style={{ opacity: 0.5 }} />
-                                            <div className="recent-item-text">
-                                                <span>{getLocalName(city)}</span>
-                                                <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
-                <div className="controls">
-                    <button onClick={handleLangChange} className="control-btn">{lang.toUpperCase()}</button>
-                    <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')} className="control-btn">
-                        {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-                    </button>
-                </div>
-            </header>
-
-            {/* HERO SECTION */}
-            <main className="hero-section glass-panel">
-                <div className="hero-text">
-                    <div className="editorial-date">{displayData?.dateLabel || <div className="skeleton skeleton-desc" style={{width: '100px'}}></div>}</div>
-
-                    {isLoading ? (
-                        <>
-                            <div className="skeleton skeleton-title"></div>
-                            <div className="skeleton skeleton-sub"></div>
-                            <div className="skeleton skeleton-temp"></div>
-                            <div className="skeleton skeleton-desc"></div>
-                        </>
-                    ) : (
-                        <>
-                            <h1 className="editorial-title">{cityNameDisplay}</h1>
-                            <div className="location-sub">
-                                {formatState(locationDetails?.state)}{locationDetails?.state ? ', ' : ''}{locationDetails?.country || weatherData?.sys?.country || ''}
-                            </div>
-                            <div className="editorial-temp">{displayData ? Math.round(displayData.temp) : '--'}°</div>
-                            <p className="editorial-desc" style={{ textTransform: 'capitalize' }}>
-                                {displayData?.description || '...'} • {t('feels')} {displayData ? Math.round(displayData.feels_like) : '--'}°
-                            </p>
-                        </>
-                    )}
-
-                    <div className="details-grid">
-                        <div className="detail-item">
-                            <span className="detail-icon"><Wind size={22} /></span>
-                            <div>
-                                <div className="detail-label">{t('wind')}</div>
-                                {isLoading ? <div className="skeleton skeleton-detail"></div> : <div className="detail-value">{displayData?.wind || '--'} m/s</div>}
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <span className="detail-icon"><Droplets size={22} /></span>
-                            <div>
-                                <div className="detail-label">{t('humidity')}</div>
-                                {isLoading ? <div className="skeleton skeleton-detail"></div> : <div className="detail-value">{displayData?.humidity || '--'}%</div>}
-                            </div>
-                        </div>
-                        <div className="detail-item">
-                            <span className="detail-icon"><Gauge size={22} /></span>
-                            <div>
-                                <div className="detail-label">{t('pressure')}</div>
-                                {isLoading ? <div className="skeleton skeleton-detail"></div> : <div className="detail-value">{displayData?.pressure || '--'} hPa</div>}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="hero-3d">
-                    <ErrorBoundary
-                        key={cityNameDisplay}
-                        errorTitle={t('errorTitle')}
-                        errorDesc={t('errorDesc')}
-                        errorBtn={t('errorBtn')}
-                    >
-                        <Canvas camera={{ position: [0, 2, 12], fov: 45 }}>
-                            <WeatherEffects iconCode={displayData?.icon} />
-                            {/* ЛОАДЕР ДЛЯ ДЕСКТОПНОЇ ВЕРСІЇ */}
-                            <Suspense fallback={<ModelLoader isMain />}>
-                                <CityModel modelUrl={getModelUrl(cityNameDisplay, locationDetails?.state)} />
-                                <Environment preset="city" />
-                            </Suspense>
-                        </Canvas>
-                    </ErrorBoundary>
-                </div>
-            </main>
-
-            {/* FORECAST */}
-            <section className="forecast-wrapper">
-                <div className={`forecast-card glass-panel ${!selectedForecast ? 'active' : ''}`} onClick={() => setSelectedForecast(null)}>
-                    <span className="forecast-day" style={{fontSize:'0.75rem', marginBottom:'5px'}}>12:00</span>
-                    <span className="forecast-day">{t('today')}</span>
-                    <div className="forecast-icon" style={{margin:'10px 0'}}>{getWeatherIcon(weatherData?.weather[0].icon, 32)}</div>
-                    <span className="forecast-temp">{weatherData ? Math.round(weatherData.main.temp) : '--'}°</span>
-                </div>
-                {forecastData.map((day) => (
-                    <div key={day.id} className={`forecast-card glass-panel ${selectedForecast?.id === day.id ? 'active' : ''}`} onClick={() => setSelectedForecast(day)}>
-                        <span className="forecast-day" style={{fontSize:'0.75rem', marginBottom:'5px'}}>12:00</span>
-                        <span className="forecast-day">{day.dayName}</span>
-                        <div className="forecast-icon" style={{margin:'10px 0'}}>{getWeatherIcon(day.icon, 32)}</div>
-                        <span className="forecast-temp">{day.temp > 0 ? '+' : ''}{day.temp}°</span>
-                    </div>
-                ))}
-            </section>
-
-            {/* MINI CITIES */}
-            <section className="bottom-grid">
-                {['Kyiv', 'Lviv', 'Odesa', 'Kharkiv'].map((city) => (
-                    <MiniCityCard
-                        key={city}
-                        city={city}
-                        onClick={() => {
-                            setCurrentCity(city);
-                            setSelectedForecast(null);
-                            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-                        }}
-                    />
-                ))}
-            </section>
-
-            <Footer />
-        </div>
+    const hero3DSlot = (
+        <ErrorBoundary key={safeKey} errorTitle={t('errorTitle')} errorDesc={t('errorDesc')} errorBtn={t('errorBtn')}>
+            <Canvas camera={{ position: [0, 2, 12], fov: 45 }}>
+                <WeatherEffects iconCode={displayData?.icon} />
+                <Suspense fallback={<ModelLoader isMain />}>
+                    <CityModel modelUrl={getModelUrl(cityNameDisplay, locationDetails?.state)} />
+                    <Environment preset="city" />
+                </Suspense>
+            </Canvas>
+        </ErrorBoundary>
     );
+
+    const forecastSlot = <ForecastList isMobile={isMobile} t={t} weatherData={weatherData} forecastData={forecastData} selectedForecast={selectedForecast} setSelectedForecast={setSelectedForecast} />;
+
+    const miniCitiesSlot = (
+        <>
+            {['Kyiv', 'Lviv', 'Odesa', 'Kharkiv'].map((city) => (
+                <MiniCityCard key={city} city={city} onClick={() => { setCurrentCity(city); setSelectedForecast(null); window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });}} />
+            ))}
+        </>
+    );
+
+    // ==========================================
+    // 8. ФІНАЛЬНИЙ РЕНДЕР (Диспетчер Лейаутів)
+    // ==========================================
+
+    if (isMobile) {
+        return <MobileLayout
+            header={headerControlsSlot}
+            searchBar={searchBarSlot}
+            heroText={heroTextSlot}
+            hero3D={hero3DSlot}
+            forecast={forecastSlot}
+            miniCities={miniCitiesSlot}
+            footer={<Footer />}
+        />;
+    }
+
+    return <DesktopLayout
+        header={headerControlsSlot}
+        searchBar={searchBarSlot}
+        heroText={heroTextSlot}
+        hero3D={hero3DSlot}
+        forecast={forecastSlot}
+        miniCities={miniCitiesSlot}
+        footer={<Footer />}
+    />;
 }
 
 export default App;
