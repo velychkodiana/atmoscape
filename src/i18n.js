@@ -12,7 +12,9 @@ const resources = {
             errorTitle: 'Oops, storm warning!',
             errorDesc: 'Something went wrong displaying this dimension. But don\'t worry, we are already clearing the clouds.',
             errorBtn: 'Reload sky',
-            modelMissing: 'Model missing'
+            modelMissing: 'Model missing',
+            loadingMain: "Loading 3D model...",
+            loadingMini: "Loading 3D..."
         }
     },
     ua: {
@@ -25,7 +27,9 @@ const resources = {
             errorTitle: 'Упс, штормове попередження!',
             errorDesc: 'Щось пішло не так із відображенням цього виміру. Але не хвилюйся, ми вже розганяємо хмари.',
             errorBtn: 'Перезавантажити небо',
-            modelMissing: 'Модель відсутня'
+            modelMissing: 'Модель відсутня',
+            loadingMain: "Завантаження 3D-моделі...",
+            loadingMini: "Завантаження 3D..."
         }
     }
 };

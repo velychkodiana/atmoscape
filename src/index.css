@@ -1043,3 +1043,28 @@ html, body, #root, .app-layout {
 .mobile-hero-3d canvas {
   pointer-events: none !important;
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1.5s linear infinite;
+}
+
+/* Ефект м'якого пульсування для лоадера */
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.3); }
+  70% { box-shadow: 0 0 0 20px rgba(167, 139, 250, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0); }
+}
+
+.loader-icon-ring {
+  border-radius: 50%;
+  animation: pulse-glow 2s infinite;
+  background: var(--glass-bg);
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

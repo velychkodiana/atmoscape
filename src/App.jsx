@@ -11,8 +11,10 @@ import WeatherEffects from './canvas/WeatherEffects';
 import MiniCityCard from './components/MiniCityCard';
 import Footer from './components/Footer';
 import { useWeather } from './hooks/useWeather';
+import ModelLoader from './components/ModelLoader';
+import NotFound from './components/NotFound';
 
-// 🔥 ІМПОРТУЄМО НАШУ НОВУ ХМАРНУ ЛОГІКУ З КОНФІГУ
+// ІМПОРТУЄМО НОВУ ХМАРНУ ЛОГІКУ З КОНФІГУ
 import { getModelUrl } from './config/models';
 
 import './index.css';
@@ -59,19 +61,24 @@ function App() {
     const { t, i18n } = useTranslation();
     const [lang, setLang] = useState('ua');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
     const [theme, setTheme] = useState('light');
     const [searchInput, setSearchInput] = useState('');
+
     // Підтягуємо останнє місто з пам'яті (або ставимо Київ за замовчуванням)
     const [currentCity, setCurrentCity] = useState(() => {
         return localStorage.getItem('atmoscape_last_city') || 'Kyiv';
     });
     const [selectedForecast, setSelectedForecast] = useState(null);
+
     const [searchError, setSearchError] = useState(false);
+    const [hasError, setHasError] = useState(false);       // 🔥 НАШ НОВИЙ СТАН ДЛЯ СТОРІНКИ 404
 
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [recentSearches, setRecentSearches] = useState(() => {
@@ -101,6 +108,9 @@ function App() {
     const formatState = (stateStr) => {
         if (!stateStr) return '';
         if (lang === 'ua') {
+            const normalized = stateStr.toLowerCase().trim();
+
+            //
             const stateMap = {
                 'kharkiv oblast': 'Харківська область', 'odesa oblast': 'Одеська область', 'kyiv oblast': 'Київська область',
                 'kyiv city': 'м. Київ', 'kyiv': 'м. Київ', 'lviv oblast': 'Львівська область', 'dnipropetrovsk oblast': 'Дніпропетровська область',
@@ -110,11 +120,46 @@ function App() {
                 'sumy oblast': 'Сумська область', 'khmelnytskyi oblast': 'Хмельницька область', 'chernivtsi oblast': 'Чернівецька область',
                 'rivne oblast': 'Рівненська область', 'ivano-frankivsk oblast': 'Івано-Франківська область', 'ternopil oblast': 'Тернопільська область',
                 'volyn oblast': 'Волинська область', 'zakarpattia oblast': 'Закарпатська область', 'kirovohrad oblast': 'Кіровоградська область',
-                'luhansk oblast': 'Луганська область', 'crimea': 'АР Крим', 'autonomous republic of crimea': 'АР Крим'
+                'luhansk oblast': 'Луганська область', 'crimea': 'АР Крим', 'autonomous republic of crimea': 'АР Крим',
+                'sevastopol': 'м. Севастополь', 'sevastopol city': 'м. Севастополь'
             };
-            const normalized = stateStr.toLowerCase().trim();
+
+            // Якщо є точний збіг — одразу віддаємо
             if (stateMap[normalized]) return stateMap[normalized];
-            return stateStr.replace(/Oblast/ig, 'область');
+
+            // 2. ЗАПАСНИЙ ПАРАШУТ (якщо API видало "Kharkivs'ka" чи "Odes'ka")
+            if (normalized.includes('kyiv') || normalized.includes('kiev')) return 'Київська область';
+            if (normalized.includes('kharkiv') || normalized.includes('kharkov')) return 'Харківська область';
+            if (normalized.includes('odes')) return 'Одеська область';
+            if (normalized.includes('lviv') || normalized.includes('lvov')) return 'Львівська область';
+            if (normalized.includes('dnipro') || normalized.includes('dnep')) return 'Дніпропетровська область';
+            if (normalized.includes('donetsk') || normalized.includes('donbas')) return 'Донецька область';
+            if (normalized.includes('zaporizh')) return 'Запорізька область';
+            if (normalized.includes('mykolaiv') || normalized.includes('nikolaev')) return 'Миколаївська область';
+            if (normalized.includes('kherson')) return 'Херсонська область';
+            if (normalized.includes('poltav')) return 'Полтавська область';
+            if (normalized.includes('chernihiv') || normalized.includes('chernigov')) return 'Чернігівська область';
+            if (normalized.includes('cherkas')) return 'Черкаська область';
+            if (normalized.includes('zhytomyr') || normalized.includes('zhitomir')) return 'Житомирська область';
+            if (normalized.includes('sumy') || normalized.includes('sumsk')) return 'Сумська область';
+            if (normalized.includes('khmelnyt')) return 'Хмельницька область';
+            if (normalized.includes('chernivts') || normalized.includes('chernovts')) return 'Чернівецька область';
+            if (normalized.includes('rivn') || normalized.includes('rovn')) return 'Рівненська область';
+            if (normalized.includes('frankivsk')) return 'Івано-Франківська область';
+            if (normalized.includes('ternopil')) return 'Тернопільська область';
+            if (normalized.includes('volyn') || normalized.includes('lutsk')) return 'Волинська область';
+            if (normalized.includes('zakarpatt') || normalized.includes('transcarpathia')) return 'Закарпатська область';
+            if (normalized.includes('kirovohrad') || normalized.includes('kropyvnyts')) return 'Кіровоградська область';
+            if (normalized.includes('luhansk') || normalized.includes('lugansk')) return 'Луганська область';
+            if (normalized.includes('vinnyts') || normalized.includes('vinnits')) return 'Вінницька область';
+            if (normalized.includes('crimea') || normalized.includes('krymska')) return 'АР Крим';
+
+            // 3. Для закордонних міст
+            return stateStr
+                .replace(/Oblast/ig, 'область')
+                .replace(/City/ig, 'місто')
+                .replace(/State/ig, 'штат')
+                .replace(/Province/ig, 'провінція');
         }
         return stateStr;
     };
@@ -137,9 +182,10 @@ function App() {
     useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
 
     const handleCitySelect = useCallback((cityObj) => {
+        setHasError(false); // 🔥 Скидаємо помилку 404 при новому виборі
         setCurrentCity(cityObj);
 
-        // 🔥 Зберігаємо в пам'ять при кожному новому пошуку
+        // Зберігаємо в пам'ять при кожному новому пошуку
         const cityName = typeof cityObj === 'string' ? cityObj : cityObj.name;
         localStorage.setItem('atmoscape_last_city', cityName);
 
@@ -157,11 +203,18 @@ function App() {
 
     const handleSearch = async (e) => {
         if (e.key === 'Enter' && searchInput.trim() !== '') {
-            const results = await getCitySuggestions(searchInput);
-            if (results && results.length > 0) handleCitySelect(results[0]);
-            else {
-                setSearchError(true);
-                setTimeout(() => setSearchError(false), 2500);
+            setHasError(false); // 🔥 Скидаємо перед пошуком
+            try {
+                const results = await getCitySuggestions(searchInput);
+                if (results && results.length > 0) {
+                    handleCitySelect(results[0]);
+                } else {
+                    setSearchError(true);
+                    setHasError(true); // 🔥 Вмикаємо 404, якщо місто не знайдено
+                    setTimeout(() => setSearchError(false), 2500);
+                }
+            } catch (error) {
+                setHasError(true); // 🔥 Вмикаємо 404 при помилці API
             }
         }
     };
@@ -181,7 +234,12 @@ function App() {
     const cityNameDisplay = getLocalName(locationDetails || weatherData?.name || currentCity);
 
 
-    // 🔥 ЧИСТА МОБІЛЬНА ВЕРСІЯ (Рендериться тільки на телефонах)
+    // 🔥 ЯКЩО ПОМИЛКА — МАЛЮЄМО СТОРІНКУ 404
+    if (hasError) {
+        return <NotFound />;
+    }
+
+    //  ЧИСТА МОБІЛЬНА ВЕРСІЯ (Рендериться тільки на телефонах)
     if (isMobile) {
         return (
             <div className="app-layout mobile-layout-clean">
@@ -197,54 +255,52 @@ function App() {
                     </div>
                 </header>
 
-                    <div className="search-container mobile-search" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
-                        <Search size={18} className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder={searchError ? t('notFound') : t('search')}
-                            className={`search-input ${searchError ? 'search-error' : ''}`}
-                            value={searchInput}
-                            onChange={(e) => { setSearchInput(e.target.value); if(searchError) setSearchError(false); }}
-                            onKeyDown={handleSearch}
-                            onClick={() => setIsSearchFocused(true)}
-                            onFocus={() => setIsSearchFocused(true)}
-                            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                            style={{ fontSize: '16px' }} /* Забороняє айфонам зумити */
-                        />
-                        {isSearchFocused && (suggestions.length > 0 || recentSearches.length > 0) && (
-                            <div className="recent-dropdown glass-panel" style={{ width: '100%', top: '100%', left: 0, zIndex: 50 }}>
-                                {/* ... (Тут логіка випадаючого списку залишається точнісінько такою ж, як в основному коді) ... */}
-                                {searchInput.length > 2 ? (
-                                    <>
-                                        <div className="recent-header">{isTyping ? t('searching') : t('suggestions')}</div>
-                                        {suggestions.map((city, idx) => (
-                                            <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
-                                                <Search size={14} style={{ opacity: 0.5 }} />
-                                                <div className="recent-item-text">
-                                                    <span>{getLocalName(city)}</span>
-                                                    <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
-                                                </div>
+                <div className="search-container mobile-search" style={{ width: '100%', maxWidth: '100%', margin: 0 }}>
+                    <Search size={18} className="search-icon" />
+                    <input
+                        type="text"
+                        placeholder={searchError ? t('notFound') : t('search')}
+                        className={`search-input ${searchError ? 'search-error' : ''}`}
+                        value={searchInput}
+                        onChange={(e) => { setSearchInput(e.target.value); if(searchError) setSearchError(false); }}
+                        onKeyDown={handleSearch}
+                        onClick={() => setIsSearchFocused(true)}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                        style={{ fontSize: '16px' }}
+                    />
+                    {isSearchFocused && (suggestions.length > 0 || recentSearches.length > 0) && (
+                        <div className="recent-dropdown glass-panel" style={{ width: '100%', top: '100%', left: 0, zIndex: 50 }}>
+                            {searchInput.length > 2 ? (
+                                <>
+                                    <div className="recent-header">{isTyping ? t('searching') : t('suggestions')}</div>
+                                    {suggestions.map((city, idx) => (
+                                        <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
+                                            <Search size={14} style={{ opacity: 0.5 }} />
+                                            <div className="recent-item-text">
+                                                <span>{getLocalName(city)}</span>
+                                                <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
                                             </div>
-                                        ))}
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="recent-header">{t('recent')}</div>
-                                        {recentSearches.map((city, idx) => (
-                                            <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
-                                                <Clock size={14} style={{ opacity: 0.5 }} />
-                                                <div className="recent-item-text">
-                                                    <span>{getLocalName(city)}</span>
-                                                    <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
-                                                </div>
+                                        </div>
+                                    ))}
+                                </>
+                            ) : (
+                                <>
+                                    <div className="recent-header">{t('recent')}</div>
+                                    {recentSearches.map((city, idx) => (
+                                        <div key={idx} className="recent-item" onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}>
+                                            <Clock size={14} style={{ opacity: 0.5 }} />
+                                            <div className="recent-item-text">
+                                                <span>{getLocalName(city)}</span>
+                                                <small>{formatState(city.state)}{city.state ? ', ' : ''}{city.country}</small>
                                             </div>
-                                        ))}
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
+                                        </div>
+                                    ))}
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 {/* ТЕКСТ (КОМПАКТНИЙ ТА СТАБІЛЬНИЙ) */}
                 <main className="mobile-hero-text glass-panel">
@@ -293,7 +349,7 @@ function App() {
                     <ErrorBoundary key={cityNameDisplay} errorTitle={t('errorTitle')} errorDesc={t('errorDesc')} errorBtn={t('errorBtn')}>
                         <Canvas camera={{ position: [0, 2, 12], fov: 45 }}>
                             <WeatherEffects iconCode={displayData?.icon} />
-                            <Suspense fallback={null}>
+                            <Suspense fallback={<ModelLoader isMain />}>
                                 <CityModel modelUrl={getModelUrl(cityNameDisplay, locationDetails?.state)} />
                                 <Environment preset="city" />
                             </Suspense>
@@ -451,8 +507,8 @@ function App() {
                     >
                         <Canvas camera={{ position: [0, 2, 12], fov: 45 }}>
                             <WeatherEffects iconCode={displayData?.icon} />
-                            <Suspense fallback={null}>
-                                {/* 🔥 ВИКОРИСТОВУЄМО ІМПОРТОВАНУ ФУНКЦІЮ З CONFIG/MODELS.JS */}
+                            {/* ЛОАДЕР ДЛЯ ДЕСКТОПНОЇ ВЕРСІЇ */}
+                            <Suspense fallback={<ModelLoader isMain />}>
                                 <CityModel modelUrl={getModelUrl(cityNameDisplay, locationDetails?.state)} />
                                 <Environment preset="city" />
                             </Suspense>

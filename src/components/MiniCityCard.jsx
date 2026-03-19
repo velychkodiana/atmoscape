@@ -3,7 +3,8 @@ import { Canvas } from '@react-three/fiber';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import CityModel from '../canvas/CityModel';
-import { cloudModels } from '../config/models'; // 🔥 Імпортуємо словник
+import { cloudModels } from '../config/models'; //  Імпортуємо словник
+import ModelLoader from './ModelLoader';
 
 class CardErrorBoundary extends React.Component {
     constructor(props) { super(props); this.state = { hasError: false }; }
@@ -65,7 +66,7 @@ export default function MiniCityCard({ city, onClick }) {
                         style={{ pointerEvents: 'none' }}>
                     <ambientLight intensity={1.5} />
                     <directionalLight position={[10, 10, 5]} intensity={1} />
-                    <Suspense fallback={null}>
+                    <Suspense fallback={<ModelLoader />}>
                         <CityModel modelUrl={dynamicModelUrl} isMini={true} />
                     </Suspense>
                 </Canvas>
