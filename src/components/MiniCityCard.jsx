@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import CityModel from '../canvas/CityModel';
-import { cloudModels } from '../config/models'; //  Імпортуємо словник
+import { cloudModels } from '../config/models';
 import ModelLoader from './ModelLoader';
 
 class CardErrorBoundary extends React.Component {
@@ -26,7 +26,7 @@ export default function MiniCityCard({ city, onClick }) {
     const [temp, setTemp] = useState(null);
     const [localName, setLocalName] = useState(city);
 
-    // 🔥 Беремо хмарне посилання. Якщо міста немає в словнику — беремо Київ
+    // Беремо хмарне посилання. Якщо міста немає в словнику — беремо Київ
     const cityKey = city.toLowerCase();
     const dynamicModelUrl = cloudModels[cityKey] || cloudModels['kyiv'];
 

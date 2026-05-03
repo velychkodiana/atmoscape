@@ -26,7 +26,7 @@ export function useWeather() {
             const apiLang = lang === 'ua' ? 'uk' : 'en';
             let targetLocation = location;
 
-            // 🔥 РОЗУМНИЙ ФІКС: Якщо клікнули на нижню картку (передали текст),
+            // Якщо клікнули на нижню картку (передали текст),
             // ми спершу витягуємо повні дані з перекладом та областю!
             if (typeof location === 'string') {
                 const geoRes = await axios.get(GEO_URL, { params: { q: location, limit: 1, appid: API_KEY } });

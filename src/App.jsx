@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import './i18n';
 import './index.css';
 
-// 🧩 НАШІ НОВІ ЧИСТІ КОМПОНЕНТИ ТА УТИЛІТИ
+//  КОМПОНЕНТИ ТА УТИЛІТИ
 import { getLocalName } from './utils/helpers';
 import HeaderControls from './components/ui/HeaderControls';
 import SearchBar from './components/ui/SearchBar';
@@ -15,7 +15,7 @@ import ForecastList from './components/weather/ForecastList';
 import MobileLayout from './layouts/MobileLayout';
 import DesktopLayout from './layouts/DesktopLayout';
 
-// 🎨 ІНШІ БЛОКИ ТА 3D
+// ІНШІ БЛОКИ ТА 3D
 import CityModel from './canvas/CityModel';
 import WeatherEffects from './canvas/WeatherEffects';
 import MiniCityCard from './components/MiniCityCard';
@@ -23,12 +23,12 @@ import Footer from './components/Footer';
 import ModelLoader from './components/ModelLoader';
 import NotFound from './components/NotFound'; // або './pages/NotFound'
 
-// ⚙️ ЛОГІКА ТА КОНФІГИ
+// ЛОГІКА ТА КОНФІГИ
 import { useWeather } from './hooks/useWeather';
 import { getModelUrl } from './config/models';
 
 function App() {
-    // 1. СТАН (STATE) ДОДАТКУ
+    // 1. STATE ДОДАТКУ
     const { t, i18n } = useTranslation();
     const [lang, setLang] = useState('ua');
     const [theme, setTheme] = useState('light');
@@ -61,7 +61,6 @@ function App() {
 
     useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
 
-    // 🔥 ФІКС 1: Залишили тільки [currentCity, lang]
     useEffect(() => { fetchWeather(currentCity, lang); }, [currentCity, lang]);
 
     useEffect(() => {
@@ -137,17 +136,15 @@ function App() {
     // 6. ПЕРЕВІРКА НА КРИТИЧНУ ПОМИЛКУ
     if (hasError) return <NotFound />;
 
-    // ==========================================
-    // 7. КОМПОЗИЦІЯ (Збираємо UI як конструктор Lego)
-    // ==========================================
 
+    // 7. КОМПОЗИЦІЯ (UI)
     const headerControlsSlot = <HeaderControls lang={lang} handleLangChange={handleLangChange} theme={theme} setTheme={setTheme} />;
 
     const searchBarSlot = <SearchBar isMobile={isMobile} t={t} lang={lang} searchError={searchError} setSearchError={setSearchError} searchInput={searchInput} setSearchInput={setSearchInput} handleSearch={handleSearch} isSearchFocused={isSearchFocused} setIsSearchFocused={setIsSearchFocused} suggestions={suggestions} recentSearches={recentSearches} isTyping={isTyping} handleCitySelect={handleCitySelect} />;
 
     const heroTextSlot = <HeroWeather displayData={displayData} isLoading={isLoading} cityNameDisplay={cityNameDisplay} locationDetails={locationDetails} weatherData={weatherData} t={t} lang={lang} isMobile={isMobile} />;
 
-    // 🔥 ФІКС 2: Створюємо стабільний ключ, який не блимає при завантаженні API
+    // Створюємо стабільний ключ, який не блимає при завантаженні API
     const safeKey = typeof currentCity === 'string' ? currentCity : currentCity?.name || 'default';
 
     const hero3DSlot = (
@@ -172,10 +169,8 @@ function App() {
         </>
     );
 
-    // ==========================================
-    // 8. ФІНАЛЬНИЙ РЕНДЕР (Диспетчер Лейаутів)
-    // ==========================================
 
+    // 8. ФІНАЛЬНИЙ РЕНДЕР (Диспетчер Лейаутів)
     if (isMobile) {
         return <MobileLayout
             header={headerControlsSlot}

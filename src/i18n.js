@@ -8,7 +8,7 @@ const resources = {
             feels: 'Feels like', search: 'Search city...', today: 'TODAY',
             notFound: 'City not found!', recent: 'Recent Searches',
             suggestions: 'Suggestions', searching: 'Searching...',
-            // Нові ключі для помилок
+            // Ключі для помилок
             errorTitle: 'Oops, storm warning!',
             errorDesc: 'Something went wrong displaying this dimension. But don\'t worry, we are already clearing the clouds.',
             errorBtn: 'Reload sky',
@@ -23,7 +23,7 @@ const resources = {
             feels: 'Відчувається', search: 'Пошук міста...', today: 'СЬОГОДНІ',
             notFound: 'Місто не знайдено!', recent: 'Останні пошуки',
             suggestions: 'Знайдено міст', searching: 'Шукаю...',
-            // Нові ключі для помилок
+            // Ключі для помилок
             errorTitle: 'Упс, штормове попередження!',
             errorDesc: 'Щось пішло не так із відображенням цього виміру. Але не хвилюйся, ми вже розганяємо хмари.',
             errorBtn: 'Перезавантажити небо',

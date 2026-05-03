@@ -23,7 +23,6 @@ export default function MiniModel({ city }) {
         <Canvas camera={{ position: [0, 1.5, 4], fov: 50 }}>
             <ambientLight intensity={0.6} />
             <directionalLight position={[2, 5, 3]} intensity={1.5} />
-            {/* Suspense обов'язковий для 3D, інакше React падає */}
             <Suspense fallback={null}>
                 <Environment preset="city" />
                 <RotatingModel modelUrl={modelUrl} />

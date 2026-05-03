@@ -10,10 +10,10 @@ export default function CityModel({ modelUrl, isMini = false }) {
         return () => { useGLTF.clear(modelUrl); };
     }, [modelUrl]);
 
-    // 🔥 БРОНЯ ДЛЯ МІНІ-КАРТОК: Плавне крутіння, яке ніколи не стрибає від скролу
+    // Плавне крутіння міні карток
     useFrame(() => {
         if (isMini && miniRef.current) {
-            miniRef.current.rotation.y += 0.003; // Дуже повільне обертання
+            miniRef.current.rotation.y += 0.003;
         }
     });
 
@@ -22,7 +22,7 @@ export default function CityModel({ modelUrl, isMini = false }) {
     if (isMini) {
         return (
             <group raycast={() => null}>
-                {/* 🔥 Змінили scale з 2.5 на 3.8 і опустили трохи нижче (position y: -1.5) */}
+
                 <group ref={miniRef} position={[0, -1.5, 0]} rotation={[0, 0.3, 0]}>
                     <Clone object={scene} scale={3.8} />
                 </group>

@@ -6,7 +6,7 @@ export const cloudModels = {
     kharkiv: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/kharkiv.glb?alt=media&token=0d6e780d-61a8-491c-9f32-27300b60c31b',
     simferopol: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/crimea.glb?alt=media&token=7a574411-6bd4-4f21-a9af-6eec4820e026',
     sevastopol: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/crimea.glb?alt=media&token=7a574411-6bd4-4f21-a9af-6eec4820e026',
-    // dnipro: 'https://...',
+    dnipro: 'https://firebasestorage.googleapis.com/v0/b/atmoscape-storage.firebasestorage.app/o/map_kyiv_ukraine.glb?alt=media&token=6dec6162-9b96-473b-816b-f7c3dd38b391',
     // donetsk: 'https://...',
     // zaporizhzhia: 'https://...',
     // poltava: 'https://...',

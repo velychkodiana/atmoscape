@@ -11,7 +11,7 @@ function Particles({ type }) {
         const temp = new Float32Array(count * 3);
         for (let i = 0; i < count * 3; i += 3) {
             temp[i] = (Math.random() - 0.5) * 40;     // X
-            temp[i + 1] = Math.random() * 20;         // Y (Висота)
+            temp[i + 1] = Math.random() * 20;         // Y
             temp[i + 2] = (Math.random() - 0.5) * 40; // Z
         }
         return temp;
@@ -43,11 +43,9 @@ function Particles({ type }) {
                 />
             </bufferGeometry>
             <pointsMaterial
-                // 🔥 Зменшуємо сніг з 0.1 до 0.035
                 size={type === 'rain' ? 0.05 : 0.035}
                 color={type === 'rain' ? '#aaaaaa' : '#ffffff'}
                 transparent
-                // Робимо сніг трохи яскравішим (0.8), щоб ці дрібні частинки було добре видно
                 opacity={type === 'rain' ? 0.6 : 0.8}
                 sizeAttenuation
             />

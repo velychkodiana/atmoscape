@@ -6,14 +6,14 @@ import { useTranslation } from 'react-i18next';
 export default function ModelLoader({ isMain = false }) {
     const { i18n } = useTranslation();
 
-    // Залізобетонна перевірка мови (працюватиме одразу)
+    // Перевірка мови (працюватиме одразу)
     const isUa = i18n.language === 'ua' || i18n.language === 'uk';
 
-    // 💎 ВЕЛИКИЙ ЛОАДЕР (Стиль "Штормового попередження")
+    // ВЕЛИКИЙ ЛОАДЕР
     if (isMain) {
         return (
             <Html center zIndexRange={[100, 0]}>
-                {/* Використовуємо твої ж класи з ErrorBoundary! */}
+                {/* Використовуємо класи з ErrorBoundary! */}
                 <div className="glass-panel error-glass" style={{
                     width: '90vw',
                     maxWidth: '450px',
@@ -51,7 +51,7 @@ export default function ModelLoader({ isMain = false }) {
         );
     }
 
-    // ⚡ МАЛЕНЬКИЙ ЛОАДЕР (Для міні-карток знизу)
+    // МАЛЕНЬКИЙ ЛОАДЕР (Для міні-карток знизу)
     return (
         <Html center zIndexRange={[100, 0]}>
             <div className="glass-panel" style={{
